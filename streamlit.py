@@ -1,40 +1,36 @@
 import streamlit as st
-import numpy as np
 import pandas as pd
-from sklearn.datasets import load_iris
+import numpy as np
+from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import mean_squared_error
 
-# Load dataset
-data = load_iris()
-df = pd.DataFrame(data.data, columns=data.feature_names)
-df['Species'] = data.target  # Keep numerical labels
+# Tạo dữ liệu giả định để huấn luyện mô hình
+np.random.seed(42)
+X = np.random.rand(100, 1) * 10  # Dữ liệu đầu vào ngẫu nhiên
+y = 2.5 * X + np.random.randn(100, 1) * 2  # Giá trị mục tiêu với một chút nhiễu
 
-# Splitting data
-X = df.drop('Species', axis=1)
-y = df['Species']
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=43)
+# Chia dữ liệu thành train và test
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Train Logistic Regression model
-lr = LogisticRegression(max_iter=200)
-lr.fit(X_train, y_train)
+# Huấn luyện mô hình Linear Regression
+model = LinearRegression()
+model.fit(X_train, y_train)
 
-# Mapping numerical labels to species names
-species_map = {0: "setosa", 1: "versicolor", 2: "virginica"}
+# Dự đoán trên bộ dữ liệu test
+y_pred = model.predict(X_test)
 
-# Streamlit UI
-st.set_page_config(page_title="Iris Logistic Regression Classifier", layout="wide")
-st.title(" Iris Dataset Classification using Logistic Regression ")
-st.write("This app predicts the species of an Iris flower based on its features using Logistic Regression.")
+# Tính toán lỗi
+mse = mean_squared_error(y_test, y_pred)
 
-# Manual input for prediction
-st.subheader(" Predict Custom Input")
-sepal_length = st.number_input("Sepal Length (cm)", min_value=4.0, max_value=8.0, value=5.0, step=0.1)
-sepal_width = st.number_input("Sepal Width (cm)", min_value=2.0, max_value=5.0, value=3.0, step=0.1)
-petal_length = st.number_input("Petal Length (cm)", min_value=1.0, max_value=7.0, value=4.0, step=0.1)
-petal_width = st.number_input("Petal Width (cm)", min_value=0.1, max_value=3.0, value=1.0, step=0.1)
+# Tạo ứng dụng Streamlit
+st.title('Ứng dụng Dự đoán với Linear Regression')
 
-if st.button(" Predict Species"):
-    sample = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
-    prediction = lr.predict(sample)[0]
-    st.success(f"**Predicted Species:** {species_map[prediction]}")
+st.write(f'Độ lỗi bình quân (MSE): {mse:.2f}')
+
+# Cho phép người dùng nhập dữ liệu
+user_input = st.number_input("Nhập giá trị X để dự đoán Y:", min_value=0.0, max_value=10.0, value=5.0)
+
+# Dự đoán dựa trên giá trị người dùng nhập
+prediction = model.predict(np.array([[user_input]]))
+st.write(f'Dự đoán giá trị Y tương ứng với X = {user_input} là: {prediction[0][0]:.2f}')
