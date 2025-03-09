@@ -1,36 +1,56 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
-from sklearn.linear_model import LinearRegression
+from sklearn import datasets
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+import pandas as pd
 
-# Tạo dữ liệu giả định để huấn luyện mô hình
-np.random.seed(42)
-X = np.random.rand(100, 1) * 10  # Dữ liệu đầu vào ngẫu nhiên
-y = 2.5 * X + np.random.randn(100, 1) * 2  # Giá trị mục tiêu với một chút nhiễu
+st.title("Scikit-learn and Streamlit Example")
 
-# Chia dữ liệu thành train và test
+# Load a dataset
+dataset_name = st.selectbox("Select Dataset", ("Iris", "Breast Cancer", "Wine"))
+
+def get_dataset(name):
+    data = None
+    if name == "Iris":
+        data = datasets.load_iris()
+    elif name == "Breast Cancer":
+        data = datasets.load_breast_cancer()
+    else:
+        data = datasets.load_wine()
+    X = data.data
+    y = data.target
+    return X, y
+
+X, y = get_dataset(dataset_name)
+st.write("Shape of dataset:", X.shape)
+st.write("Number of classes:", len(pd.Series(y).unique()))
+
+# Add model parameters
+st.sidebar.header("Hyperparameters")
+n_estimators = st.sidebar.slider("Number of Estimators", 10, 200, 100)
+max_depth = st.sidebar.slider("Max Depth", 2, 20, 10)
+
+# Train the model
+clf = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, random_state=42)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+clf.fit(X_train, y_train)
+y_pred = clf.predict(X_test)
+acc = accuracy_score(y_test, y_pred)
 
-# Huấn luyện mô hình Linear Regression
-model = LinearRegression()
-model.fit(X_train, y_train)
+st.write(f"Accuracy = {acc}")
 
-# Dự đoán trên bộ dữ liệu test
-y_pred = model.predict(X_test)
-
-# Tính toán lỗi
-mse = mean_squared_error(y_test, y_pred)
-
-# Tạo ứng dụng Streamlit
-st.title('Ứng dụng Dự đoán với Linear Regression')
-
-st.write(f'Độ lỗi bình quân (MSE): {mse:.2f}')
-
-# Cho phép người dùng nhập dữ liệu
-user_input = st.number_input("Nhập giá trị X để dự đoán Y:", min_value=0.0, max_value=10.0, value=5.0)
-
-# Dự đoán dựa trên giá trị người dùng nhập
-prediction = model.predict(np.array([[user_input]]))
-st.write(f'Dự đoán giá trị Y tương ứng với X = {user_input} là: {prediction[0][0]:.2f}')
+# Display the dataset
+st.subheader("Dataset Preview")
+if dataset_name == "Iris":
+    df = pd.DataFrame(data=X, columns=datasets.load_iris().feature_names)
+    df['target'] = y
+    st.dataframe(df)
+elif dataset_name == "Breast Cancer":
+    df = pd.DataFrame(data=X, columns=datasets.load_breast_cancer().feature_names)
+    df['target'] = y
+    st.dataframe(df)
+else:
+    df = pd.DataFrame(data=X, columns=datasets.load_wine().feature_names)
+    df['target'] = y
+    st.dataframe(df)
