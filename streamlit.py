@@ -1,56 +1,88 @@
 import streamlit as st
-from sklearn import datasets
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.datasets import load_diabetes
 
-st.title("Scikit-learn and Streamlit Example")
+st.title("Streamlit App with Scikit-learn")
 
-# Load a dataset
-dataset_name = st.selectbox("Select Dataset", ("Iris", "Breast Cancer", "Wine"))
+# Example 1: Linear Regression with Diabetes Dataset
+st.header("Linear Regression with Diabetes Dataset")
 
-def get_dataset(name):
-    data = None
-    if name == "Iris":
-        data = datasets.load_iris()
-    elif name == "Breast Cancer":
-        data = datasets.load_breast_cancer()
-    else:
-        data = datasets.load_wine()
-    X = data.data
-    y = data.target
-    return X, y
+# Load the diabetes dataset
+diabetes = load_diabetes()
+df = pd.DataFrame(diabetes.data, columns=diabetes.feature_names)
+df['target'] = diabetes.target
 
-X, y = get_dataset(dataset_name)
-st.write("Shape of dataset:", X.shape)
-st.write("Number of classes:", len(pd.Series(y).unique()))
+st.write("Diabetes Dataset Preview:")
+st.dataframe(df.head())
 
-# Add model parameters
-st.sidebar.header("Hyperparameters")
-n_estimators = st.sidebar.slider("Number of Estimators", 10, 200, 100)
-max_depth = st.sidebar.slider("Max Depth", 2, 20, 10)
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(diabetes.data, diabetes.target, test_size=0.2, random_state=42)
 
-# Train the model
-clf = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, random_state=42)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-clf.fit(X_train, y_train)
-y_pred = clf.predict(X_test)
-acc = accuracy_score(y_test, y_pred)
+# Train a linear regression model
+model = LinearRegression()
+model.fit(X_train, y_train)
 
-st.write(f"Accuracy = {acc}")
+# Make predictions and evaluate the model
+y_pred = model.predict(X_test)
+mse = mean_squared_error(y_test, y_pred)
 
-# Display the dataset
-st.subheader("Dataset Preview")
-if dataset_name == "Iris":
-    df = pd.DataFrame(data=X, columns=datasets.load_iris().feature_names)
-    df['target'] = y
-    st.dataframe(df)
-elif dataset_name == "Breast Cancer":
-    df = pd.DataFrame(data=X, columns=datasets.load_breast_cancer().feature_names)
-    df['target'] = y
-    st.dataframe(df)
-else:
-    df = pd.DataFrame(data=X, columns=datasets.load_wine().feature_names)
-    df['target'] = y
-    st.dataframe(df)
+st.write(f"Mean Squared Error: {mse}")
+
+# Plot actual vs. predicted values
+st.subheader("Actual vs. Predicted Values")
+fig, ax = plt.subplots()
+ax.scatter(y_test, y_pred)
+ax.set_xlabel("Actual Values")
+ax.set_ylabel("Predicted Values")
+st.pyplot(fig)
+
+# Example 2: Simple Data Visualization (same as before)
+st.header("Data Visualization")
+
+# Generate some random data
+np.random.seed(42)
+data = pd.DataFrame({
+    'x': np.random.rand(100),
+    'y': np.random.rand(100),
+    'category': np.random.choice(['A', 'B', 'C'], 100)
+})
+
+# Scatter plot
+st.subheader("Scatter Plot")
+fig, ax = plt.subplots()
+sns.scatterplot(x='x', y='y', hue='category', data=data, ax=ax)
+st.pyplot(fig)
+
+# Histogram
+st.subheader("Histogram")
+fig, ax = plt.subplots()
+sns.histplot(data['x'], ax=ax)
+st.pyplot(fig)
+
+# Example 3: User Input and Simple Calculations (same as before)
+st.header("User Input and Calculations")
+
+num1 = st.number_input("Enter a number:")
+num2 = st.number_input("Enter another number:")
+
+if st.button("Calculate Sum"):
+    st.write(f"The sum is: {num1 + num2}")
+
+# Example 4: Displaying Text and Markdown (same as before)
+st.header("Text and Markdown")
+
+st.write("This is a simple text display.")
+
+st.markdown("""
+    # Markdown Example
+    You can use markdown to format text.
+    * Bullet points
+    * _Italics_
+    * **Bold**
+""")
