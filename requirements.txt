@@ -1,6 +1,7 @@
-streamlit==1.16.0  # Hoặc phiên bản mới hơn
-scikit-learn==1.2.2  # Phiên bản mới hơn
-pandas==1.5.3  # Phiên bản mới hơn
+streamlit
+scikit-learn==1.2.2
+
+
 
 
 
